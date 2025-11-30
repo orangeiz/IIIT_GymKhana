@@ -1,24 +1,35 @@
-// src/pages/clubs/technical.jsx
+// src/pages/clubs/technical.tsx
 import Navbar from '../../components/navbar';
 import { Code, Calendar, MapPin, Users, Mail, Phone, Github, Linkedin } from 'lucide-react';
 import techBg from '../../assets/technical.png';
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { eventsAPI, clubsAPI } from '../../services/api';
 
 export default function TechnicalClub() {
-  const events = [
-    { id: 4, title: "TechFest 2026", date: "10–12 Jan 2026", venue: "Engineering Block", registered: 450 },
-    { id: 5, title: "National Level Hackathon", date: "28 Dec 2025", venue: "CSE Lab", registered: 280 },
-    { id: 6, title: "Robotics Workshop", date: "18 Nov 2025", venue: "Mech Lab", registered: 85 },
-  ];
+  const [events, setEvents] = useState<any[]>([]);
+  const [teamMembers, setTeamMembers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Core Team Members (No Photos)
-  const teamMembers = [
-    { name: "Aryan Patel", role: "President", year: "4th Year", domain: "Full Stack & AI Lead", phone: "+91 98765 11111", email: "aryan.tech@college.edu", github: "github.com/aryanpatel" },
-    { name: "Sanya Gupta", role: "Vice President", year: "3rd Year", domain: "Web Dev & UI/UX", phone: "+91 87654 22222", email: "sanya.tech@college.edu", github: "github.com/sanyagupta" },
-    { name: "Rahul Mehta", role: "General Secretary", year: "3rd Year", domain: "Competitive Programming", phone: "+91 76543 33333", email: "rahul.tech@college.edu", github: "github.com/rahulcp" },
-    { name: "Isha Singh", role: "Technical Head", year: "4th Year", domain: "Machine Learning", phone: "+91 65432 44444", email: "isha.tech@college.edu", github: "github.com/ishaml" },
-    { name: "Vivek Kumar", role: "Event Coordinator", year: "3rd Year", domain: "Cybersecurity", phone: "+91 54321 55555", email: "vivek.tech@college.edu", github: "github.com/vivekcyber" },
-    { name: "Pooja Sharma", role: "Design & Media Head", year: "2nd Year", domain: "Graphics & Video", phone: "+91 43210 66666", email: "pooja.tech@college.edu", github: "github.com/poojadesign" },
-  ];
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [eventsData, teamData] = await Promise.all([
+        eventsAPI.getAll('technical'),
+        clubsAPI.getTeam('technical')
+      ]);
+      setEvents(eventsData);
+      setTeamMembers(teamData);
+    } catch (error) {
+      console.error('Error fetching technical club data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -41,8 +52,13 @@ export default function TechnicalClub() {
         <section className="py-20 bg-gray-50">
           <div className="max-w-7xl mx-auto px-6">
             <h2 className="text-5xl font-bold text-center mb-16 text-gray-800">Upcoming Events</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-              {events.map(event => (
+            {loading ? (
+              <div className="text-center py-12 text-gray-600">Loading events...</div>
+            ) : events.length === 0 ? (
+              <div className="text-center py-12 text-gray-600">No events available</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                {events.map(event => (
                 <div key={event.id} className="bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition">
                   <div className="h-48 bg-linear-to-br from-blue-500 to-cyan-600 flex items-center justify-center">
                     <Code className="w-20 h-20 text-white opacity-80" />
@@ -54,13 +70,14 @@ export default function TechnicalClub() {
                       <p className="flex items-center gap-2"><MapPin className="w-5 h-5" /> {event.venue}</p>
                       <p className="flex items-center gap-2"><Users className="w-5 h-5" /> {event.registered} Registered</p>
                     </div>
-                    <a href={`/event/${event.id}`} className="mt-6 block text-center bg-blue-600 text-white py-3 rounded-full hover:bg-blue-700 transition font-medium">
+                    <Link to={`/event/${event.id}`} className="mt-6 block text-center bg-blue-600 text-white py-3 rounded-full hover:bg-blue-700 transition font-medium">
                       View Details & Register
-                    </a>
+                    </Link>
                   </div>
                 </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
@@ -72,8 +89,11 @@ export default function TechnicalClub() {
               <p className="text-xl text-gray-600">The brilliant minds powering innovation</p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-              {teamMembers.map((member, index) => (
+            {loading ? (
+              <div className="text-center py-12 text-gray-600">Loading team members...</div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+                {teamMembers.map((member, index) => (
                 <div 
                   key={index}
                   className="group bg-linear-to-br from-blue-50 to-cyan-50 rounded-3xl p-8 shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 border border-blue-100"
@@ -111,8 +131,9 @@ export default function TechnicalClub() {
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 

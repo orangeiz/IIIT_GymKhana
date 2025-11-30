@@ -1,24 +1,68 @@
-// src/pages/admin.jsx
+// src/pages/admin.tsx
 import Navbar from '../components/navbar';
 import { Shield, Calendar, User, CheckCircle, XCircle, Clock, Hash } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { adminAPI } from '../services/api';
+import { useNavigate } from 'react-router-dom';
+import { authAPI } from '../services/api';
 
 export default function AdminPanel() {
-  // Mock data — replace with real API later
-  const bookingRequests = [
-    { id: 101, name: "Rahul Sharma", roll: "21CS045", facility: "Main Cricket Ground", date: "2025-12-05", time: "2:00 PM - 5:00 PM", purpose: "Team Practice", status: "pending" },
-    { id: 102, name: "Priya Verma", roll: "22EC012", facility: "Auditorium", date: "2025-12-10", time: "6:00 PM - 9:00 PM", purpose: "Cultural Rehearsal", status: "approved" },
-    { id: 103, name: "Amit Kumar", roll: "21ME078", facility: "Indoor Stadium", date: "2025-11-30", time: "9:00 AM - 12:00 PM", purpose: "Badminton Tournament", status: "pending" },
-  ];
+  const [bookingRequests, setBookingRequests] = useState<any[]>([]);
+  const [eventRegistrations, setEventRegistrations] = useState<any[]>([]);
+  const [stats, setStats] = useState({
+    pendingRequests: 0,
+    approvedToday: 0,
+    totalRegistrations: 0,
+    activeEvents: 0
+  });
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-  const eventRegistrations = [
-    { id: 201, name: "Rohan Singh", roll: "21CS101", event: "Inter-College Cricket Tournament", registeredOn: "2025-11-25" },
-    { id: 202, name: "Sneha Patel", roll: "22IT056", event: "TechFest 2026 Hackathon", registeredOn: "2025-11-26" },
-    { id: 203, name: "Vikram Singh", roll: "21EE089", event: "UTSAV 2026 - Dance Competition", registeredOn: "2025-11-28" },
-    { id: 204, name: "Anjali Mehta", roll: "22CS034", event: "National Robotics Championship", registeredOn: "2025-11-27" },
-  ];
+  useEffect(() => {
+    const user = authAPI.getUser();
+    if (!user || !user.isAdmin) {
+      navigate('/');
+      return;
+    }
+    fetchData();
+  }, [navigate]);
 
-  const handleApprove = (id: number) => alert(`Approved booking ID: ${id}`);
-  const handleReject = (id: number) => alert(`Rejected booking ID: ${id}`);
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [bookings, registrations, statsData] = await Promise.all([
+        adminAPI.getBookings(),
+        adminAPI.getRegistrations(4),
+        adminAPI.getStats()
+      ]);
+      setBookingRequests(bookings);
+      setEventRegistrations(registrations);
+      setStats(statsData);
+    } catch (error) {
+      console.error('Error fetching admin data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApprove = async (id: number) => {
+    try {
+      await adminAPI.approveBooking(id);
+      await fetchData();
+    } catch (error: any) {
+      alert(error.message || 'Failed to approve booking');
+    }
+  };
+
+  const handleReject = async (id: number) => {
+    if (!confirm('Are you sure you want to reject this booking?')) return;
+    try {
+      await adminAPI.rejectBooking(id);
+      await fetchData();
+    } catch (error: any) {
+      alert(error.message || 'Failed to reject booking');
+    }
+  };
 
   return (
     <>
@@ -33,28 +77,32 @@ export default function AdminPanel() {
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
-            <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-2xl p-6 text-center">
-              <Clock className="w-10 h-10 mx-auto mb-3 text-yellow-400" />
-              <h3 className="text-4xl font-bold">27</h3>
-              <p className="text-gray-400">Pending Requests</p>
+          {loading ? (
+            <div className="text-center py-12 text-gray-400">Loading...</div>
+          ) : (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+              <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-2xl p-6 text-center">
+                <Clock className="w-10 h-10 mx-auto mb-3 text-yellow-400" />
+                <h3 className="text-4xl font-bold">{stats.pendingRequests}</h3>
+                <p className="text-gray-400">Pending Requests</p>
+              </div>
+              <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-2xl p-6 text-center">
+                <CheckCircle className="w-10 h-10 mx-auto mb-3 text-green-400" />
+                <h3 className="text-4xl font-bold">{stats.approvedToday}</h3>
+                <p className="text-gray-400">Approved Today</p>
+              </div>
+              <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-2xl p-6 text-center">
+                <User className="w-10 h-10 mx-auto mb-3 text-blue-400" />
+                <h3 className="text-4xl font-bold">{stats.totalRegistrations}</h3>
+                <p className="text-gray-400">Total Registrations</p>
+              </div>
+              <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-2xl p-6 text-center">
+                <Calendar className="w-10 h-10 mx-auto mb-3 text-purple-400" />
+                <h3 className="text-4xl font-bold">{stats.activeEvents}</h3>
+                <p className="text-gray-400">Active Events</p>
+              </div>
             </div>
-            <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-2xl p-6 text-center">
-              <CheckCircle className="w-10 h-10 mx-auto mb-3 text-green-400" />
-              <h3 className="text-4xl font-bold">89</h3>
-              <p className="text-gray-400">Approved Today</p>
-            </div>
-            <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-2xl p-6 text-center">
-              <User className="w-10 h-10 mx-auto mb-3 text-blue-400" />
-              <h3 className="text-4xl font-bold">1,247</h3>
-              <p className="text-gray-400">Total Registrations</p>
-            </div>
-            <div className="bg-gray-800/80 backdrop-blur-sm border border-gray-700 rounded-2xl p-6 text-center">
-              <Calendar className="w-10 h-10 mx-auto mb-3 text-purple-400" />
-              <h3 className="text-4xl font-bold">12</h3>
-              <p className="text-gray-400">Active Events</p>
-            </div>
-          </div>
+          )}
 
           <div className="grid lg:grid-cols-2 gap-10">
 
@@ -70,17 +118,17 @@ export default function AdminPanel() {
                     <div className="flex justify-between items-start mb-4">
                       <div>
                         <p className="text-xl font-semibold">{req.name}</p>
-                        <p className="text-sm text-gray-400">Roll: {req.roll}</p>
+                        <p className="text-sm text-gray-400">Roll: {req.rollNumber}</p>
                       </div>
                       <span className={`px-4 py-1 rounded-full text-sm font-medium ${
-                        req.status === 'approved' ? 'bg-green-600' : 'bg-yellow-600'
+                        req.status === 'approved' ? 'bg-green-600' : req.status === 'rejected' ? 'bg-red-600' : 'bg-yellow-600'
                       }`}>
                         {req.status.toUpperCase()}
                       </span>
                     </div>
                     <div className="text-sm text-gray-300 space-y-1">
                       <p><strong>Facility:</strong> {req.facility}</p>
-                      <p><strong>Date & Time:</strong> {req.date} • {req.time}</p>
+                      <p><strong>Date & Time:</strong> {req.date} • {req.timeSlot}</p>
                       <p><strong>Purpose:</strong> {req.purpose}</p>
                     </div>
                     {req.status === 'pending' && (
@@ -115,8 +163,8 @@ export default function AdminPanel() {
                   <div key={reg.id} className="bg-gray-900/80 border border-gray-700 rounded-2xl p-5 hover:border-purple-600 transition flex items-center justify-between">
                     <div>
                       <p className="font-semibold text-lg">{reg.name}</p>
-                      <p className="text-sm text-gray-400">Roll: {reg.roll}</p>
-                      <p className="text-purple-300 mt-1">{reg.event}</p>
+                      <p className="text-sm text-gray-400">Roll: {reg.rollNumber}</p>
+                      <p className="text-purple-300 mt-1">{reg.eventTitle}</p>
                     </div>
                     <div className="text-right text-sm text-gray-400">
                       <p>Registered</p>
