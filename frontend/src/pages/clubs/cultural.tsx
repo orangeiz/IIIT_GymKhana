@@ -101,7 +101,7 @@ export default function CulturalClub() {
                   <div className="text-center">
                     {/* Initials Circle with Music Note */}
                     <div className="relative w-24 h-24 mx-auto mb-6 bg-linear-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center text-white text-3xl font-bold shadow-xl">
-                      {member.name.split(' ').map(n => n[0]).join('')}
+                      {member.name.split(' ').map((n: string) => n[0]).join('')}
                       <Mic2 className="absolute -top-2 -right-2 w-8 h-8 text-yellow-300 opacity-80" />
                     </div>
 
