@@ -9,6 +9,8 @@ import CulturalClub from './pages/clubs/cultural';
 import About from './pages/about';
 import Booking from './pages/booking';
 import AdminPanel from './pages/admin';
+import Login from './pages/login';
+import EventDetails from './pages/event-details';
 import stadiumImg from './assets/stadium.jpg';
 
 function Home() {
@@ -73,6 +75,8 @@ function App() {
       <Route path="/about" element={<About />} />
       <Route path="/booking" element={<Booking />} />
       <Route path="/admin" element={<AdminPanel />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/event/:id" element={<EventDetails />} />
     </Routes>
   );
 }

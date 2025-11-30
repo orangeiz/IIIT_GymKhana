@@ -1,24 +1,35 @@
-// src/pages/clubs/cultural.jsx
+// src/pages/clubs/cultural.tsx
 import Navbar from '../../components/navbar';
 import { Music, Calendar, MapPin, Users, Mail, Phone, Instagram, Mic2 } from 'lucide-react';
 import culturalBg from '../../assets/cultural.jpg';
+import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { eventsAPI, clubsAPI } from '../../services/api';
 
 export default function CulturalClub() {
-  const events = [
-    { id: 7, title: "UTSAV 2026 – Annual Cultural Fest", date: "20–22 Feb 2026", venue: "Open Air Theatre", registered: 1200 },
-    { id: 8, title: "Diwali Night", date: "8 Nov 2025", venue: "Auditorium", registered: 890 },
-    { id: 9, title: "Freshers Dance Competition", date: "12 Oct 2025", venue: "Main Stage", registered: 320 },
-  ];
+  const [events, setEvents] = useState<any[]>([]);
+  const [teamMembers, setTeamMembers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Core Team Members (No Photos)
-  const teamMembers = [
-    { name: "Aditi Sharma", role: "President", year: "4th Year", domain: "Dance & Choreography", phone: "+91 98765 55555", email: "aditi.cultural@college.edu", instagram: "instagram.com/aditi_dance" },
-    { name: "Karan Malhotra", role: "Vice President", year: "3rd Year", domain: "Music & Singing", phone: "+91 87654 44444", email: "karan.cultural@college.edu", instagram: "instagram.com/karan_sings" },
-    { name: "Riya Kapoor", role: "General Secretary", year: "3rd Year", domain: "Drama & Theatre", phone: "+91 76543 33333", email: "riya.cultural@college.edu", instagram: "instagram.com/riya_drama" },
-    { name: "Arnav Singh", role: "Event Head", year: "4th Year", domain: "Fashion & Ramp Walk", phone: "+91 65432 22222", email: "arnav.cultural@college.edu", instagram: "instagram.com/arnav_fashion" },
-    { name: "Nisha Verma", role: "Creative Head", year: "2nd Year", domain: "Art & Photography", phone: "+91 54321 11111", email: "nisha.cultural@college.edu", instagram: "instagram.com/nisha_art" },
-    { name: "Siddhant Rao", role: "Media & PR Head", year: "3rd Year", domain: "Videography & Reels", phone: "+91 43210 99999", email: "siddhant.cultural@college.edu", instagram: "instagram.com/siddhant_reels" },
-  ];
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const [eventsData, teamData] = await Promise.all([
+        eventsAPI.getAll('cultural'),
+        clubsAPI.getTeam('cultural')
+      ]);
+      setEvents(eventsData);
+      setTeamMembers(teamData);
+    } catch (error) {
+      console.error('Error fetching cultural club data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <>
@@ -41,8 +52,13 @@ export default function CulturalClub() {
         <section className="py-20 bg-gray-50">
           <div className="max-w-7xl mx-auto px-6">
             <h2 className="text-5xl font-bold text-center mb-16 text-gray-800">Upcoming Events</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-              {events.map(event => (
+            {loading ? (
+              <div className="text-center py-12 text-gray-600">Loading events...</div>
+            ) : events.length === 0 ? (
+              <div className="text-center py-12 text-gray-600">No events available</div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                {events.map(event => (
                 <div key={event.id} className="bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition">
                   <div className="h-48 bg-linear-to-br from-purple-500 to-pink-600 flex items-center justify-center">
                     <Music className="w-20 h-20 text-white opacity-80" />
@@ -54,13 +70,14 @@ export default function CulturalClub() {
                       <p className="flex items-center gap-2"><MapPin className="w-5 h-5" /> {event.venue}</p>
                       <p className="flex items-center gap-2"><Users className="w-5 h-5" /> {event.registered} Registered</p>
                     </div>
-                    <a href={`/event/${event.id}`} className="mt-6 block text-center bg-purple-600 text-white py-3 rounded-full hover:bg-purple-700 transition font-medium">
+                    <Link to={`/event/${event.id}`} className="mt-6 block text-center bg-purple-600 text-white py-3 rounded-full hover:bg-purple-700 transition font-medium">
                       View Details & Register
-                    </a>
+                    </Link>
                   </div>
                 </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
@@ -72,8 +89,11 @@ export default function CulturalClub() {
               <p className="text-xl text-gray-600">The artists and performers who light up the stage</p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-              {teamMembers.map((member, index) => (
+            {loading ? (
+              <div className="text-center py-12 text-gray-600">Loading team members...</div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+                {teamMembers.map((member, index) => (
                 <div 
                   key={index}
                   className="group bg-linear-to-br from-purple-50 to-pink-50 rounded-3xl p-8 shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 border border-purple-100"
@@ -112,8 +132,9 @@ export default function CulturalClub() {
                     </div>
                   </div>
                 </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 
